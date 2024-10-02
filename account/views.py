@@ -1,19 +1,81 @@
 import datetime
 import jwt
+import random
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 from django.conf import settings
 from rest_framework import parsers, renderers, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import CustomAuthTokenSerializer, CustomUserRegistrationSerializer, UpdateCustomUserSerializer, TokenSerializer
+from .serializers import CustomAuthTokenSerializer, CustomUserRegistrationSerializer, UpdateCustomUserSerializer, TokenSerializer, EmailSerializer
 from .models import CustomUser
 
-class Registration(APIView):
+
+
+class BeforeRegistration(APIView):
+    serializer_class = EmailSerializer
 
     def post(self, request, format=None):
-        serializer = CustomUserRegistrationSerializer(data=request.data)
+        secret_key = random.randint(10000, 99999)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
+            email_user = serializer.validated_data['email']
+            fromaddr = "voron_script@mail.ru"
+            toaddr = f"{email_user}"
+            mypass = "Q9xuBRVJa2T5GctLhFyq"
+ 
+            msg = MIMEMultipart('alternative')
+            msg['From'] = fromaddr
+            msg['To'] = toaddr
+            msg['Subject'] = "Привет от Voron Script!"
+ 
+            s1 = """
+            <!DOCTYPE html>
+            <html lang="ru">
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Подтверждение регистрации</title>
+            </head>
+            <body>
+            <div class="container">
+                <h1>Код подтверждения:""" 
+
+            s2 = """ </h1></div></body></html>"""
+            s3 = f'{secret_key}'
+            body = s1 + s2 + s3
+
+            msg.attach(MIMEText(body, 'html'))
+ 
+            server = smtplib.SMTP_SSL('smtp.mail.ru', 465)
+            server.login(fromaddr, mypass)
+            text = msg.as_string()
+            server.sendmail(fromaddr, toaddr, text)
+            server.quit()
+
+            token_registration = jwt.encode({
+                'secret_key': str(secret_key),
+                'iat': datetime.datetime.utcnow(),
+                'nbf': datetime.datetime.utcnow() + datetime.timedelta(minutes=-5),
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+            }, settings.SECRET_KEY, algorithm="HS256")
+            return Response({"token_registration": token_registration}, status=status.HTTP_200_OK)
+
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class Registration(APIView):
+    serializer_class = CustomUserRegistrationSerializer
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            token_registration = serializer.validated_data["token_registration"]
+            if token_registration == serializer.validated_data['key_mail']:
+                user = serializer.save()
+                return Response(status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

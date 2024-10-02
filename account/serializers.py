@@ -6,11 +6,38 @@ from django.utils.translation import gettext_lazy as _
 from .manager import CustomUserManager
 import jwt
 
-class CustomUserRegistrationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ['email', 'first_name',
-                  'second_name', 'last_name', 'password']
+class CustomUserRegistrationSerializer(serializers.Serializer):
+    token_registration = serializers.CharField()
+    email = serializers.EmailField(label='email')
+    password = serializers.CharField(label='password')
+    first_name = serializers.CharField(label='first_name')
+    second_name = serializers.CharField(label='second_name')
+    last_name = serializers.CharField(label='last_name')
+    key_mail = serializers.CharField()
+
+
+    def validate(self, attrs):
+        token_registration = attrs.get('token_registration')
+        if token_registration:
+            try:
+                token_registration_decode = jwt.decode(token_registration, key=settings.SECRET_KEY, algorithms=["HS256"])
+            except jwt.exceptions.DecodeError:
+                raise serializers.ValidationError(code='authorization')
+        else:
+            raise serializers.ValidationError(code='authorization')\
+
+        exp_dict = {
+        "email": attrs.get('email'), 
+        "first_name": attrs.get('first_name'),
+        "last_name": attrs.get('last_name'),
+        "password": attrs.get('password'),
+        "key_mail": attrs.get('key_mail')
+        }
+        for key in exp_dict.keys():
+            if exp_dict.get(key) == None:
+                raise serializers.ValidationError(code='authorization')
+        attrs['token_registration'] = token_registration_decode['secret_key']
+        return attrs
 
     def create(self, validated_data):
         user = CustomUser(
@@ -118,9 +145,37 @@ class TokenSerializer(serializers.Serializer):
         return attrs
 
 
+class EmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(label='email')
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        if email:
+            return attrs
+        else:
+            raise serializers.ValidationError(code='authorization')
 
 
+'''
+class CustomUserRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'first_name',
+                  'second_name', 'last_name', 'password']
 
+    def create(self, validated_data):
+        user = CustomUser(
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            second_name=validated_data['second_name'],
+            last_name=validated_data['last_name'],
+        )
+
+        user.set_password(validated_data['password'])
+        user.save()
+
+        return user
+'''
 
 
 

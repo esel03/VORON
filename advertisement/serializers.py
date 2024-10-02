@@ -6,7 +6,7 @@ from django.conf import settings
 import jwt
 
 
-class CreateUserCustomAddSerializer(serializers.Serializer):
+class CreateAdvertisementAddSerializer(serializers.Serializer):
     token = serializers.CharField(label='token')
     type_services = serializers.CharField(label='type_services')
     platforms = serializers.CharField(label='platforms')
@@ -47,7 +47,22 @@ class CreateUserCustomAddSerializer(serializers.Serializer):
 
 
 
+class TokenSerializer(serializers.Serializer):
+    token = serializers.CharField(label='token')
+    number_interval = serializers.IntegerField(label='number_interval')
 
+    def validate(self, attrs):
+        token = attrs.get('token')
+        if token:
+            try:
+                auth = jwt.decode(token, key=settings.SECRET_KEY, algorithms=["HS256"])
+            except jwt.exceptions.DecodeError:
+                raise serializers.ValidationError(code='authorization')
+        else:
+            raise serializers.ValidationError(code='authorization')
+
+        attrs['auth'] = auth['id_user']
+        return attrs
 
 
 

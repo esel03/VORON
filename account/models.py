@@ -12,7 +12,7 @@ class CustomUser(AbstractUser, PermissionsMixin):
     id_user = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(_('email address'), unique=True)
-    second_name = models.CharField(max_length=60, default=None)
+    second_name = models.CharField(max_length=60, blank=True, default=None)
     sleep = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'

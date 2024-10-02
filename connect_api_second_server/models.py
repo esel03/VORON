@@ -8,37 +8,41 @@ from advertisement.models import Advertisement
 
 
 class Provider(models.Model):
-    id_provider = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False)
-    key_adv = models.ForeignKey(Advertisement, on_delete = models.CASCADE)
+    adv = models.OneToOneField(
+        Advertisement, default=uuid.uuid4, 
+        on_delete = models.CASCADE, primary_key=True)
     title = models.CharField(max_length=240)
     text_in = models.TextField()
     text_out = models.TextField()
 
     def __str__(self):
-        return self.id_provider
+        return str(self.id_adv)
 
+    
 
 class Product(models.Model):
-    id_product = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False)
-    key_adv = models.ForeignKey(Advertisement, on_delete = models.CASCADE)
+    adv = models.OneToOneField(
+        Advertisement, default=uuid.uuid4, 
+        on_delete = models.CASCADE, primary_key=True)
     title = models.CharField(max_length=240)
     text_in = models.TextField()
     text_out = models.TextField()
 
     def __str__(self):
-        return self.id_product
+        return str(self.id_adv)
 
+    
 
 class Industry(models.Model):
-    id_industry = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False)
-    key_adv = models.ForeignKey(Advertisement, on_delete = models.CASCADE)
+    adv = models.OneToOneField(
+        Advertisement, default=uuid.uuid4, 
+        on_delete = models.CASCADE, primary_key=True)
     title = models.CharField(max_length=240)
     text_in = models.TextField()
     text_out = models.TextField()
 
     def __str__(self):
-        return self.id_industry
+        return str(self.id_adv)
+
+ 
 # Create your models here.

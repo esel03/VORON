@@ -20,6 +20,31 @@ class ConnectSerializer(serializers.Serializer):
         else:
             msg = _('Не хватает данных.')
             raise serializers.ValidationError(msg)
+'''
+class ProviderSerializer(serializers.Serializer):
+    id_provider = serializers.CharField(label='id_provider')
+    title = serializers.CharField(label='title')
+    text_in = serializers.CharField(label='text_in')
 
-        
-    
+    def validate(self, attrs):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class ProviderSerializer(serializers.Serializer):
+
+class ProviderSerializer(serializers.Serializer):
+'''  
