@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from account.models import CustomUser
+from advertisement.models import Advertisement
 from .models import Provider, Product, Industry
 import jwt
 class ConnectSerializer(serializers.Serializer):
@@ -92,6 +93,30 @@ class CreateUnderTableAdvertisementSerializer(serializers.Serializer):
 
 
 
+class TakeMarketingSpecificSerializer(serializers.Serializer):
+    token = serializers.CharField(label='token')
+    adv_id = serializers.CharField(label='adv_id')
+
+    def validate(self, attrs):
+        token = attrs.get('token')
+        adv_id = attrs.get('type_services')
+        if token:
+            try:
+                auth = jwt.decode(token, key=settings.SECRET_KEY, algorithms=["HS256"])
+            except jwt.exceptions.DecodeError:
+                raise serializers.ValidationError(code='authorization')
+        else:
+            raise serializers.ValidationError(code='authorization')
+
+        marketing = Advertisement.objects.get(pk=adv_id)
+        type_services = marketing.type_services
+        exp_dict = {
+            "economic_works": f'{marketing.economic_works}',
+            "type_services": f'{type_services}',
+            }
+        if type_services == 'услуга':
+            marketing_twotable = Provider.objects.get(pk=adv_id)
+            exp_dict.update([(f'{title}', f'{marketing_twotable.title}')])
 
 
 

@@ -46,7 +46,12 @@ class CreateUnderTableAdvertisement(APIView):
 
 
 
+class TakeMarketingSpecific(APIView):
+    serializer_class = TakeMarketingSpecificSerializer
 
+    def post(self, request, format=None):
+        serializer = sejf.serializer_class(data=request.data)
+        if serializer.is_valid():
 
 
 
