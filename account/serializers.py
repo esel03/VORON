@@ -7,13 +7,13 @@ from .manager import CustomUserManager
 import jwt
 
 class CustomUserRegistrationSerializer(serializers.Serializer):
-    token_registration = serializers.CharField()
+    token_registration = serializers.CharField(label='token_registration')
     email = serializers.EmailField(label='email')
     password = serializers.CharField(label='password')
     first_name = serializers.CharField(label='first_name')
     second_name = serializers.CharField(label='second_name')
     last_name = serializers.CharField(label='last_name')
-    key_mail = serializers.CharField()
+    key_mail = serializers.CharField(label='key_mail')
 
 
     def validate(self, attrs):

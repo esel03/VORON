@@ -5,7 +5,7 @@ import uuid
 import datetime
 
 class Advertisement(models.Model):
-    id_adv = models.UUIDField(
+    adv_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False)
     users = models.ForeignKey(CustomUser, default=uuid.uuid4, on_delete = models.CASCADE)
     CHOICES_SERVICES = (
@@ -19,17 +19,18 @@ class Advertisement(models.Model):
     status_paid = models.BooleanField(default=False) # статус оплаты
     price = models.FloatField() #цена компании
     date_create = models.DateTimeField(auto_now=True) #дата создания компании
-    date_start = models.DateTimeField(blank=True) #дата запуска комании 
-    date_finish = models.DateTimeField(blank=True) #дата окончания компании
+    date_start = models.DateTimeField(blank=True, null=True) #дата запуска комании 
+    date_finish = models.DateTimeField(blank=True, null=True) #дата окончания компании
     economic_works = models.TextField() #сфера эконом деятельности
-    status_done = models.BooleanField(default=False) #завершенность
+    status_done = models.BooleanField(default=True) #завершенность
+    status_first_start = models.BooleanField(default=True) #первый ли это запуск
 
     class Meta:
         ordering = ["status_paid", "-price", "-date_create", "status_done", "-date_start"]
 
 
-    def str(self):
-        return f"{CustomUser.objects.get(pk=self.users.id_user).email},  {self.platforms},  {self.type_services},  {self.id_adv}, {self.date_create}, {self.date_start}, {self.date_finish}"
+    def __str__(self):
+        return f"{CustomUser.objects.get(pk=self.users.id_user).email},  {self.platforms},  {self.type_services},  {self.adv_id}, {self.date_create}, {self.date_start}, {self.date_finish}"
 
 
 

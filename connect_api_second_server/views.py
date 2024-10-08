@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 #from curl_cffi import requests
 from rest_framework.views import APIView
-from .serializers import ConnectSerializer
+from .serializers import ConnectSerializer, CreateUnderTableAdvertisementSerializer
 import json
 
 url = "http://127.0.0.1:8001/api/"
@@ -28,6 +28,43 @@ class Connect(APIView):
         print(json_text)
         return Response({"id_user": json_text["id_user"], "out": json_text["out"]})
         
+
+
+
+class CreateUnderTableAdvertisement(APIView):
+    serializer_class = CreateUnderTableAdvertisementSerializer
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            return Response(status=status.HTTP_201_CREATED)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #requests.post(url, headers=headers, json=prompt)
 

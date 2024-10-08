@@ -13,10 +13,11 @@ class Provider(models.Model):
         on_delete = models.CASCADE, primary_key=True)
     title = models.CharField(max_length=240)
     text_in = models.TextField()
-    text_out = models.TextField()
+    skill_level = models.TextField(blank=True, default=None)
+    text_out = models.TextField(blank=True)
 
     def __str__(self):
-        return str(self.id_adv)
+        return str(self.adv_id)
 
     
 
@@ -26,10 +27,11 @@ class Product(models.Model):
         on_delete = models.CASCADE, primary_key=True)
     title = models.CharField(max_length=240)
     text_in = models.TextField()
-    text_out = models.TextField()
+    details = models.TextField(blank=True, default=None)
+    text_out = models.TextField(blank=True)
 
     def __str__(self):
-        return str(self.id_adv)
+        return str(self.adv_id)
 
     
 
@@ -39,10 +41,11 @@ class Industry(models.Model):
         on_delete = models.CASCADE, primary_key=True)
     title = models.CharField(max_length=240)
     text_in = models.TextField()
-    text_out = models.TextField()
+    founding_date = models.CharField(max_length=4, blank=True, default=None)
+    text_out = models.TextField(blank=True)
 
     def __str__(self):
-        return str(self.id_adv)
+        return str(self.adv_id)
 
  
 # Create your models here.
