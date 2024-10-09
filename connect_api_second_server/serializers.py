@@ -5,6 +5,8 @@ from account.models import CustomUser
 from advertisement.models import Advertisement
 from .models import Provider, Product, Industry
 import jwt
+
+
 class ConnectSerializer(serializers.Serializer):
     id_user = serializers.CharField(
         label=_("id_user"),
@@ -14,6 +16,7 @@ class ConnectSerializer(serializers.Serializer):
         label=_("entry"),
         write_only=True
     )
+
     def validate(self, data):
         id_user = data.get('id_user')
         entry = data.get('entry')
@@ -39,22 +42,23 @@ class CreateUnderTableAdvertisementSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         token = attrs.get('token')
-        type_services = attrs.get('type_services')
+        type_services = attrs.get('type_services').lower()
         if token:
             try:
-                auth = jwt.decode(token, key=settings.SECRET_KEY, algorithms=["HS256"])
+                auth = jwt.decode(
+                    token, key=settings.SECRET_KEY, algorithms=["HS256"])
             except jwt.exceptions.DecodeError:
                 raise serializers.ValidationError(code='authorization')
         else:
             raise serializers.ValidationError(code='authorization')
-        if type_services == 'услуга': #provider
+        if type_services == 'услуга':  # provider
             if attrs.get('skill_level') != None:
                 exp_dict = {
                     "adv_id": attrs.get('adv_id'),
-                    "title": attrs.get('title'), 
+                    "title": attrs.get('title'),
                     "text_in": attrs.get('text_in'),
                     "skill_level": attrs.get('skill_level')
-                    }
+                }
             else:
                 raise serializers.ValidationError(code='authorization')
 
@@ -62,28 +66,28 @@ class CreateUnderTableAdvertisementSerializer(serializers.Serializer):
             attrs['auth'] = auth
             return attrs
 
-        elif type_services == 'товар': #product
+        elif type_services == 'товар':  # product
             if attrs.get('details') != None:
                 exp_dict = {
                     "adv_id": attrs.get('adv_id'),
-                    "title": attrs.get('title'), 
+                    "title": attrs.get('title'),
                     "text_in": attrs.get('text_in'),
                     "details": attrs.get('details')
-                    }
+                }
             else:
                 raise serializers.ValidationError(code='authorization')
 
             Product.objects.create(**exp_dict)
             attrs['auth'] = auth
             return attrs
-        else: #industry
+        else:  # industry
             if attrs.get('founding_date') != None:
                 exp_dict = {
                     "adv_id": attrs.get('adv_id'),
-                    "title": attrs.get('title'), 
+                    "title": attrs.get('title'),
                     "text_in": attrs.get('text_in'),
                     "founding_date": attrs.get('founding_date')
-                    }
+                }
             else:
                 raise serializers.ValidationError(code='authorization')
 
@@ -92,67 +96,92 @@ class CreateUnderTableAdvertisementSerializer(serializers.Serializer):
             return attrs
 
 
-
 class TakeMarketingSpecificSerializer(serializers.Serializer):
     token = serializers.CharField(label='token')
     adv_id = serializers.CharField(label='adv_id')
 
     def validate(self, attrs):
         token = attrs.get('token')
-        adv_id = attrs.get('type_services')
+        adv_id = attrs.get('adv_id')
         if token:
             try:
-                auth = jwt.decode(token, key=settings.SECRET_KEY, algorithms=["HS256"])
+                auth = jwt.decode(
+                    token, key=settings.SECRET_KEY, algorithms=["HS256"])
             except jwt.exceptions.DecodeError:
                 raise serializers.ValidationError(code='authorization')
         else:
             raise serializers.ValidationError(code='authorization')
 
-        marketing = Advertisement.objects.get(pk=adv_id)
+        marketing = Advertisement.objects.get(adv_id=adv_id)
         type_services = marketing.type_services
         exp_dict = {
             "economic_works": f'{marketing.economic_works}',
             "type_services": f'{type_services}',
-            }
+        }
         if type_services == 'услуга':
-            marketing_twotable = Provider.objects.get(pk=adv_id)
-            exp_dict.update([(f'{title}', f'{marketing_twotable.title}')])
+            marketing_twotable = Provider.objects.get(adv=adv_id)
+            exp_dict.update([('title', f'{marketing_twotable.title}')])
+            exp_dict.update([('text_in', f'{marketing_twotable.text_in}')])
+            exp_dict.update(
+                [('skill_level', f'{marketing_twotable.skill_level}')])
+            # exp_dict.update([('text_out', f'{marketing_twotable.text_out}')])
+            attrs.update(exp_dict)
+            return attrs
+        elif type_services == 'товар':
+            marketing_twotable = Product.objects.get(adv=adv_id)
+            exp_dict.update([('title', f'{marketing_twotable.title}')])
+            exp_dict.update([('text_in', f'{marketing_twotable.text_in}')])
+            exp_dict.update([('details', f'{marketing_twotable.details}')])
+            # exp_dict.update([('text_out', f'{marketing_twotable.text_out}')])
+            attrs.update(exp_dict)
+            return attrs
+        elif type_services == 'предприятие':
+            marketing_twotable = Industry.objects.get(adv=adv_id)
+            exp_dict.update([('title', f'{marketing_twotable.title}')])
+            exp_dict.update([('text_in', f'{marketing_twotable.text_in}')])
+            exp_dict.update(
+                [('founding_date', f'{marketing_twotable.founding_date}')])
+            # exp_dict.update([('text_out', f'{marketing_twotable.text_out}')])
+            attrs.update(exp_dict)
+            return attrs
 
 
+class UpdateUnderTableAdvertisementSerializer(serializers.Serializer):
+    token = serializers.CharField(label='token')
+    adv_id = serializers.CharField(label='adv_id')
+    text_out = serializers.CharField(label='text_out')
+
+    def validate(self, attrs):
+        token = attrs.get('token')
+        adv_id = attrs.get('adv_id')
+        if token:
+            try:
+                auth = jwt.decode(
+                    token, key=settings.SECRET_KEY, algorithms=["HS256"])
+            except jwt.exceptions.DecodeError:
+                raise serializers.ValidationError(code='authorization')
+        else:
+            raise serializers.ValidationError(code='authorization')
+        
+        exp_model = [Product,Provider,Industry]
+        print(exp_model,type(exp_model))
+
+        for iterator in exp_model:
+            #try:
+            if iterator.objects.filter(adv_id=adv_id).exists():
+                iterator.objects.update(text_out=attrs.get('text_out'))
+            else:
+                continue
+            #except DoesNotExist
+                
+                    
+        return attrs
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+'''
+attrs['type_services'] = marketing.type_services
+        attrs['economic_works'] = marketing.economic_works
+        attrs['type_services'] =  type_services'''
 
 '''
 class ProviderSerializer(serializers.Serializer):
@@ -162,23 +191,7 @@ class ProviderSerializer(serializers.Serializer):
 
     def validate(self, attrs):
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class ProviderSerializer(serializers.Serializer):
 
 class ProviderSerializer(serializers.Serializer):
-'''  
+'''
