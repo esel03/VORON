@@ -178,6 +178,33 @@ class UpdateUnderTableAdvertisementSerializer(serializers.Serializer):
         return attrs
 
 
+
+class TextAdvertisementOutputSerializer(serializers.Serializer):
+    token = serializers.CharField(label='token')
+    adv_id = serializers.CharField(label='adv_id')
+    #text_out = serializers.CharField(label='text_out')
+
+    def validate(self, attrs):
+        token = attrs.get('token')
+        adv_id = attrs.get('adv_id')
+        if token:
+            try:
+                auth = jwt.decode(
+                    token, key=settings.SECRET_KEY, algorithms=["HS256"])
+            except jwt.exceptions.DecodeError:
+                raise serializers.ValidationError(code='authorization')
+        else:
+            raise serializers.ValidationError(code='authorization')
+        
+        exp_model = [Product, Provider, Industry]
+        for iterator in exp_model:
+            if iterator.objects.filter(adv_id=adv_id).exists():
+                attrs['text_out'] = iterator.objects.get(adv_id=adv_id).text_out
+            else:
+                continue
+        return attrs
+
+
 '''
 attrs['type_services'] = marketing.type_services
         attrs['economic_works'] = marketing.economic_works

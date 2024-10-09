@@ -3,7 +3,7 @@ import requests
 from rest_framework import parsers, renderers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import ConnectSerializer, CreateUnderTableAdvertisementSerializer, TakeMarketingSpecificSerializer, UpdateUnderTableAdvertisementSerializer
+from .serializers import ConnectSerializer, CreateUnderTableAdvertisementSerializer, TakeMarketingSpecificSerializer, UpdateUnderTableAdvertisementSerializer, TextAdvertisementOutputSerializer
 import json
 from .models import Provider, Product, Industry
 
@@ -35,7 +35,8 @@ class CreateUnderTableAdvertisement(APIView):
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            return Response(status=status.HTTP_201_CREATED)
+
+            return Response(serializer.validated_data['auth']['id_user'], status=status.HTTP_201_CREATED)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -62,8 +63,17 @@ class UpdateUnderTableAdvertisement(APIView):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
             
-                        
-                    
+
+class TextAdvertisementOutput(APIView):
+    serializer_class = TextAdvertisementOutputSerializer
+    
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            return Response(serializer.validated_data['text_out'], status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)              
+                   
 
 
 # requests.post(url, headers=headers, json=prompt)
